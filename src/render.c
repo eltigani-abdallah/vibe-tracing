@@ -66,9 +66,13 @@ static vec3	c3_lerp(vec3 a, vec3 b, double t)
 
 static uint32_t	c3_to_argb(vec3 c)
 {
-	const int	r = (int)round(255.0 * c.x);
-	const int	g = (int)round(255.0 * c.y);
-	const int	b = (int)round(255.0 * c.z);
+	const double	inv_gamma = 1.0 / 2.2;
+	const double	rf = pow(fmax(0.0, c.x), inv_gamma);
+	const double	gf = pow(fmax(0.0, c.y), inv_gamma);
+	const double	bf = pow(fmax(0.0, c.z), inv_gamma);
+	const int		r = (int)round(255.0 * rf);
+	const int		g = (int)round(255.0 * gf);
+	const int		b = (int)round(255.0 * bf);
 
 	return (argb_u8(clampi(r, 0, 255), clampi(g, 0, 255), clampi(b, 0, 255)));
 }
