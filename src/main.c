@@ -130,8 +130,8 @@ static vec3 water_normal(double wx, double wz, double time) {
 // ============================================================
 #define T_MIN          1e-4
 #define T_MAX          1e10
-#define MAX_BOUNCES    4      /* profondeur max récursion */
-#define AA_SAMPLES     4      /* anti-aliasing : 4 rayons par pixel (grille 2×2) */
+#define MAX_BOUNCES    1      /* profondeur max récursion : 1 pour performance */
+#define AA_SAMPLES     1      /* anti-aliasing : 1 rayon par pixel (aucun anti-aliasing pour performance) */
 
 // Plan de l'eau
 #define WATER_LEVEL    0.0
@@ -1046,9 +1046,6 @@ void update_pixels(App* app) {
     static const double sub_x[4] = {0.25, 0.75, 0.25, 0.75};
     static const double sub_y[4] = {0.25, 0.25, 0.75, 0.75};
 
-    double half_w = WINDOW_WIDTH  * 0.5;
-    double half_h = WINDOW_HEIGHT * 0.5;
-
     for (int py = 0; py < WINDOW_HEIGHT; py++) {
         for (int px = 0; px < WINDOW_WIDTH; px++) {
 
@@ -1062,13 +1059,13 @@ void update_pixels(App* app) {
             }
             color col = vec3_scale(acc, 1.0 / AA_SAMPLES);
 
-            /* --- Vignette douce (cercle unitaire) --- */
-            double nx = ((double)px - half_w) / half_w;
+            /* --- Vignette disabled for performance --- */
+            /* double nx = ((double)px - half_w) / half_w;
             double ny = ((double)py - half_h) / half_h;
             double vig = 1.0 - (nx*nx + ny*ny) * 0.50;
             if (vig < 0.0) vig = 0.0;
-            vig = vig * vig;  /* smooth */
-            col = vec3_scale(col, vig);
+            vig = vig * vig;
+            col = vec3_scale(col, vig); */
 
             app->pixel_buffer[py * WINDOW_WIDTH + px] = color_tonemap_argb(col);
         }
