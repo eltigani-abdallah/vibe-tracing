@@ -213,7 +213,16 @@ static bool	hit_cylinder_y(ray r, cylinder c, double tmin, double tmax, hit *out
 static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
-	vec3	base = c3_lerp(c3(0.25, 0.5, 0.7), c3(0.1, 0.2, 0.5), t);
+	
+	vec3	horizon = c3(1.0, 0.6, 0.3);
+	vec3	mid_sky = c3(0.9, 0.5, 0.4);
+	vec3	zenith = c3(0.3, 0.1, 0.2);
+	
+	vec3	base;
+	if (t < 0.5)
+		base = c3_lerp(horizon, mid_sky, t * 2.0);
+	else
+		base = c3_lerp(mid_sky, zenith, (t - 0.5) * 2.0);
 	
 	double	cloud = 0.0;
 	
@@ -233,10 +242,12 @@ static vec3	sky_color(vec3 dir)
 	
 	cloud = fmin(1.0, cloud);
 	
+	vec3	cloud_color = c3(1.0, 0.8, 0.6);
+	
 	return (c3(
-		base.x * (1.0 - cloud * 0.8) + 1.0 * cloud * 0.8,
-		base.y * (1.0 - cloud * 0.8) + 1.0 * cloud * 0.8,
-		base.z * (1.0 - cloud * 0.6) + 1.0 * cloud * 0.6
+		base.x * (1.0 - cloud * 0.8) + cloud_color.x * cloud * 0.8,
+		base.y * (1.0 - cloud * 0.8) + cloud_color.y * cloud * 0.8,
+		base.z * (1.0 - cloud * 0.8) + cloud_color.z * cloud * 0.8
 	));
 }
 
