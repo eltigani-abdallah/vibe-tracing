@@ -122,7 +122,7 @@ static uint32_t	trace_primary(ray r)
 		return (best.color);
 	{
 		const double	t = 0.5 * (r.dir.y + 1.0);
-		return (color_lerp(argb_u8(20, 40, 120), argb_u8(120, 170, 255), t));
+		return (color_lerp(argb_u8(255, 140, 90), argb_u8(60, 20, 120), t));
 	}
 }
 
