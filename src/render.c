@@ -95,7 +95,7 @@ static bool	hit_plane_y0(ray r, double tmin, double tmax, hit *out)
 	}
 	if (v3_dot(out->n_unit, r.dir) > 0.0)
 		out->n_unit = v3_mul(out->n_unit, -1.0);
-	out->albedo = c3(0.10, 0.18, 0.25);
+	out->albedo = c3(0.0, 0.3, 0.6);
 	out->mirror = true;
 	return (true);
 }
@@ -223,7 +223,7 @@ static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
 
-	return (c3_lerp(c3(1.0, 0.55, 0.35), c3(0.24, 0.08, 0.47), t));
+	return (c3_lerp(c3(0.3, 0.7, 1.0), c3(0.0, 0.2, 0.8), t));
 }
 
 static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
@@ -233,27 +233,13 @@ static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 
 	any = false;
 	{
-		const box	platform = {
-			.min = v3(-8.0, 0.0, 0.0),
-			.max = v3(8.0, 0.55, 260.0),
-			.albedo = c3(0.55, 0.55, 0.58),
+		const box	submerged_platform = {
+			.min = v3(-8.0, -0.3, 0.0),
+			.max = v3(8.0, 0.0, 260.0),
+			.albedo = c3(0.40, 0.40, 0.43),
 			.mirror = false
 		};
-		if (hit_box(r, platform, tmin, tmax, &h))
-		{
-			*out = h;
-			tmax = h.t;
-			any = true;
-		}
-	}
-	{
-		const box	train = {
-			.min = v3(-3.5, 0.55, 60.0),
-			.max = v3(3.5, 2.7, 140.0),
-			.albedo = c3(0.12, 0.16, 0.25),
-			.mirror = false
-		};
-		if (hit_box(r, train, tmin, tmax, &h))
+		if (hit_box(r, submerged_platform, tmin, tmax, &h))
 		{
 			*out = h;
 			tmax = h.t;
@@ -295,10 +281,19 @@ static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 
 static vec3	shade_diffuse(hit h)
 {
-	const vec3	light_dir = v3_norm(v3(0.6, 1.0, -0.2));
-	const double	nl = fmax(0.0, v3_dot(h.n_unit, light_dir));
-	const double	ambient = 0.22;
+	const vec3	light_dir = v3_norm(v3(-1.0, 2.0, 0.5));
+	hit			shadow_test = {0};
+	const ray	shadow_ray = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
+		.dir = light_dir};
+	double		nl;
+	double		ambient;
+	bool		in_shadow;
 
+	in_shadow = scene_intersect(shadow_ray, 0.001, 1e30, &shadow_test);
+	nl = fmax(0.0, v3_dot(h.n_unit, light_dir));
+	ambient = 0.22;
+	if (in_shadow)
+		nl *= 0.3;
 	return (c3_mul(h.albedo, ambient + (1.0 - ambient) * nl));
 }
 
@@ -360,12 +355,28 @@ void	render_frame(t_app *app, const camera *cam, int scale, double time_s)
 		int	x = 0;
 		while (x < app->width)
 		{
-			const int	sx = x + (scale / 2);
-			const int	sy = y + (scale / 2);
-			const ray	r = camera_ray_for_pixel(cam, sx, sy, app->width, app->height);
-			const uint32_t	argb = c3_to_argb(trace(r, 3));
+			vec3	color = v3(0.0, 0.0, 0.0);
+			int	samples = (scale > 1) ? 2 : 4;
+			int	s = 0;
 
-			fill_block(app, x, y, scale, argb);
+			while (s < samples)
+			{
+				int	t = 0;
+				while (t < samples)
+				{
+					const double	offset_x = (double)s / (double)samples + 0.25;
+					const double	offset_y = (double)t / (double)samples + 0.25;
+					const int		sx = x + (scale / 2) + (int)(offset_x - 0.5);
+					const int		sy = y + (scale / 2) + (int)(offset_y - 0.5);
+					const ray		r = camera_ray_for_pixel(cam, sx, sy, app->width, app->height);
+
+					color = v3_add(color, trace(r, 3));
+					t++;
+				}
+				s++;
+			}
+			color = v3_mul(color, 1.0 / (double)(samples * samples));
+			fill_block(app, x, y, scale, c3_to_argb(color));
 			x += scale;
 		}
 		y += scale;

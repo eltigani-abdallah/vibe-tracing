@@ -77,7 +77,7 @@ int	main(int argc, char **argv)
 		{
 			const double	speed = 6.0;
 
-			dx = (keys[SDL_SCANCODE_D] ? 1.0 : 0.0) - (keys[SDL_SCANCODE_A] ? 1.0 : 0.0);
+			dx = (keys[SDL_SCANCODE_A] ? 1.0 : 0.0) - (keys[SDL_SCANCODE_D] ? 1.0 : 0.0);
 			dz = (keys[SDL_SCANCODE_W] ? 1.0 : 0.0) - (keys[SDL_SCANCODE_S] ? 1.0 : 0.0);
 			if (dx != 0.0 || dz != 0.0)
 				scale = 4;
