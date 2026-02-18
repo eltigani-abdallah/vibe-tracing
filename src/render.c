@@ -224,7 +224,7 @@ static vec3	sky_color(vec3 dir)
 	else
 		base = c3_lerp(mid_sky, zenith, (t - 0.5) * 2.0);
 	
-	double	sun_x = 0.6;
+	double	sun_x = -0.7;
 	double	sun_y = 0.2;
 	double	sun_dist = sqrt((dir.x - sun_x) * (dir.x - sun_x) + 
 	                         (dir.y - sun_y) * (dir.y - sun_y));
@@ -234,9 +234,9 @@ static vec3	sky_color(vec3 dir)
 	
 	vec3	sun_color = c3(1.0, 0.9, 0.5);
 	base = c3(
-		base.x + sun_glow * sun_color.x * 0.5,
-		base.y + sun_glow * sun_color.y * 0.3,
-		base.z + sun_glow * sun_color.z * 0.1
+		base.x + sun_glow * sun_color.x * 0.8,
+		base.y + sun_glow * sun_color.y * 0.6,
+		base.z + sun_glow * sun_color.z * 0.2
 	);
 	
 	double	cloud = 0.0;
