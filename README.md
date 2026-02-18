@@ -21,3 +21,9 @@ make run
 ## Controls (coming soon)
 
 - `ESC` / window close: quit
+- `SPACE`: toggle **auto cinematic** / **interactive**
+- Interactive: `W/S` forward/back, `A/D` strafe left/right
+
+## Performance trick
+
+While the camera is moving, rendering uses a lower resolution (pixel blocks) for speed.
