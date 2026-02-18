@@ -1,4 +1,5 @@
 #include "rt.h"
+#include "render.h"
 
 static bool	handle_event(SDL_Event *e, bool *running)
 {
@@ -21,12 +22,15 @@ static bool	handle_event(SDL_Event *e, bool *running)
 int	main(int argc, char **argv)
 {
 	t_app	app;
+	camera	cam;
 	bool	running;
 
 	(void)argc;
 	(void)argv;
 	if (!app_init(&app, "Ray Tracing (Chihiro)", 800, 600))
 		return (1);
+	camera_lookat(&cam, v3(0.0, 1.2, -4.0), v3(0.0, 0.8, 3.0), v3(0.0, 1.0, 0.0),
+		60.0, (double)app.width / (double)app.height);
 	running = true;
 	while (running)
 	{
@@ -34,7 +38,7 @@ int	main(int argc, char **argv)
 
 		while (SDL_PollEvent(&e))
 			handle_event(&e, &running);
-		app_clear(&app, 0xFF000000u);
+		render_frame(&app, &cam);
 		if (!app_present(&app))
 			break ;
 		SDL_Delay(1);
