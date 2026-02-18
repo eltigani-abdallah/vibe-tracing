@@ -2,7 +2,7 @@
 # Fenêtre de base avec buffer de pixels
 
 CC = gcc
-CFLAGS = -std=c99 -Wall -Wextra -O2 `sdl2-config --cflags`
+CFLAGS = -std=c99 -D_GNU_SOURCE -Wall -Wextra -O2 `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs`
 
 # Fichiers source

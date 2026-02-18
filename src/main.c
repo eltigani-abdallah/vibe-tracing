@@ -1040,17 +1040,8 @@ void update_pixels(App* app) {
     /* --- Mise à jour de la caméra (dual-mode) --- */
     update_camera(app, dt);
 
-    /* --- Rendu progressif --- */
-    /* En mode jeu : scan rapide (20 lignes/frame) pour reconstruire
-       l'image vite après un mouvement. En démo : 6 lignes (fluide). */
-    int linesf = app->is_demo_mode ? LINES_PER_FRAME : 20;
-
-    if (app->current_line >= WINDOW_HEIGHT)
-        app->current_line = 0;
-
-    int line_end = app->current_line + linesf;
-    if (line_end > WINDOW_HEIGHT) line_end = WINDOW_HEIGHT;
-
+    /* --- Rendu complet du frame --- */
+    /* Rendre chaque pixel du frame complet à chaque itération */
     /* Grille 2×2 pour 4× MSAA (décalages sous-pixel fixes Halton) */
     static const double sub_x[4] = {0.25, 0.75, 0.25, 0.75};
     static const double sub_y[4] = {0.25, 0.25, 0.75, 0.75};
@@ -1058,7 +1049,7 @@ void update_pixels(App* app) {
     double half_w = WINDOW_WIDTH  * 0.5;
     double half_h = WINDOW_HEIGHT * 0.5;
 
-    for (int py = app->current_line; py < line_end; py++) {
+    for (int py = 0; py < WINDOW_HEIGHT; py++) {
         for (int px = 0; px < WINDOW_WIDTH; px++) {
 
             /* --- 4× MSAA --- */
@@ -1082,7 +1073,6 @@ void update_pixels(App* app) {
             app->pixel_buffer[py * WINDOW_WIDTH + px] = color_tonemap_argb(col);
         }
     }
-    app->current_line = line_end;
 }
 
 // ============================================================
