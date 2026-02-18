@@ -9,7 +9,8 @@ BUILD_DIR := build
 
 SRCS := \
 	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/app.c
+	$(SRC_DIR)/app.c \
+	$(SRC_DIR)/camera.c
 
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 

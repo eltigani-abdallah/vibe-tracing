@@ -17,5 +17,6 @@ $flags = (pkg-config --cflags --libs sdl2) -split ' '
 gcc -std=c11 -O2 -Wall -Wextra -Wpedantic -Iinclude `
 	src/main.c `
 	src/app.c `
+	src/camera.c `
 	@flags `
 	-o $Out
