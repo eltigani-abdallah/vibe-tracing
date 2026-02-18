@@ -11,12 +11,22 @@ typedef struct s_hit
 	bool	mirror;
 }	hit;
 
-typedef struct s_sphere
+typedef struct s_box
 {
-	vec3		center;
-	double		radius;
-	vec3		albedo;
-}	sphere;
+	vec3	min;
+	vec3	max;
+	vec3	albedo;
+	bool	mirror;
+}	box;
+
+typedef struct s_cylinder
+{
+	vec3	center_xz;
+	double	radius;
+	double	y0;
+	double	y1;
+	vec3	albedo;
+}	cylinder;
 
 static inline vec3	c3(double r, double g, double b)
 {
@@ -61,35 +71,6 @@ static uint32_t	c3_to_argb(vec3 c)
 	return (argb_u8(clampi(r, 0, 255), clampi(g, 0, 255), clampi(b, 0, 255)));
 }
 
-static bool	hit_sphere(ray r, sphere s, double tmin, double tmax, hit *out)
-{
-	const vec3	oc = v3_sub(r.origin, s.center);
-	const double	a = v3_dot(r.dir, r.dir);
-	const double	half_b = v3_dot(oc, r.dir);
-	const double	c = v3_dot(oc, oc) - s.radius * s.radius;
-	const double	discriminant = half_b * half_b - a * c;
-
-	if (discriminant < 0.0)
-		return (false);
-	{
-		const double	sqrtd = sqrt(discriminant);
-		double			root = (-half_b - sqrtd) / a;
-
-		if (root < tmin || root > tmax)
-		{
-			root = (-half_b + sqrtd) / a;
-			if (root < tmin || root > tmax)
-				return (false);
-		}
-		out->t = root;
-		out->p = ray_at(r, root);
-		out->n_unit = v3_norm(v3_div(v3_sub(out->p, s.center), s.radius));
-		out->albedo = s.albedo;
-		out->mirror = false;
-		return (true);
-	}
-}
-
 static bool	hit_plane_y0(ray r, double tmin, double tmax, hit *out)
 {
 	const double	eps = 1e-9;
@@ -110,6 +91,125 @@ static bool	hit_plane_y0(ray r, double tmin, double tmax, hit *out)
 	return (true);
 }
 
+static bool	hit_box(ray r, box b, double tmin, double tmax, hit *out)
+{
+	double	t_enter;
+	double	t_exit;
+	vec3	n_enter;
+
+	t_enter = tmin;
+	t_exit = tmax;
+	n_enter = v3(0.0, 1.0, 0.0);
+	{
+		const double	inv = 1.0 / r.dir.x;
+		double			t0 = (b.min.x - r.origin.x) * inv;
+		double			t1 = (b.max.x - r.origin.x) * inv;
+		vec3			n0 = (inv >= 0.0) ? v3(-1.0, 0.0, 0.0) : v3(1.0, 0.0, 0.0);
+		vec3			n1 = (inv >= 0.0) ? v3(1.0, 0.0, 0.0) : v3(-1.0, 0.0, 0.0);
+
+		if (t0 > t1)
+		{
+			const double	tmp = t0; t0 = t1; t1 = tmp;
+			{ const vec3	tn = n0; n0 = n1; n1 = tn; }
+		}
+		if (t0 > t_enter)
+		{
+			t_enter = t0;
+			n_enter = n0;
+		}
+		if (t1 < t_exit)
+			t_exit = t1;
+		if (t_exit <= t_enter)
+			return (false);
+	}
+	{
+		const double	inv = 1.0 / r.dir.y;
+		double			t0 = (b.min.y - r.origin.y) * inv;
+		double			t1 = (b.max.y - r.origin.y) * inv;
+		vec3			n0 = (inv >= 0.0) ? v3(0.0, -1.0, 0.0) : v3(0.0, 1.0, 0.0);
+		vec3			n1 = (inv >= 0.0) ? v3(0.0, 1.0, 0.0) : v3(0.0, -1.0, 0.0);
+
+		if (t0 > t1)
+		{
+			const double	tmp = t0; t0 = t1; t1 = tmp;
+			{ const vec3	tn = n0; n0 = n1; n1 = tn; }
+		}
+		if (t0 > t_enter)
+		{
+			t_enter = t0;
+			n_enter = n0;
+		}
+		if (t1 < t_exit)
+			t_exit = t1;
+		if (t_exit <= t_enter)
+			return (false);
+	}
+	{
+		const double	inv = 1.0 / r.dir.z;
+		double			t0 = (b.min.z - r.origin.z) * inv;
+		double			t1 = (b.max.z - r.origin.z) * inv;
+		vec3			n0 = (inv >= 0.0) ? v3(0.0, 0.0, -1.0) : v3(0.0, 0.0, 1.0);
+		vec3			n1 = (inv >= 0.0) ? v3(0.0, 0.0, 1.0) : v3(0.0, 0.0, -1.0);
+
+		if (t0 > t1)
+		{
+			const double	tmp = t0; t0 = t1; t1 = tmp;
+			{ const vec3	tn = n0; n0 = n1; n1 = tn; }
+		}
+		if (t0 > t_enter)
+		{
+			t_enter = t0;
+			n_enter = n0;
+		}
+		if (t1 < t_exit)
+			t_exit = t1;
+		if (t_exit <= t_enter)
+			return (false);
+	}
+	out->t = t_enter;
+	out->p = ray_at(r, t_enter);
+	out->n_unit = n_enter;
+	if (v3_dot(out->n_unit, r.dir) > 0.0)
+		out->n_unit = v3_mul(out->n_unit, -1.0);
+	out->albedo = b.albedo;
+	out->mirror = b.mirror;
+	return (true);
+}
+
+static bool	hit_cylinder_y(ray r, cylinder c, double tmin, double tmax, hit *out)
+{
+	const vec3	oc = v3_sub(r.origin, v3(c.center_xz.x, 0.0, c.center_xz.z));
+	const double	a = r.dir.x * r.dir.x + r.dir.z * r.dir.z;
+	const double	half_b = oc.x * r.dir.x + oc.z * r.dir.z;
+	const double	cc = oc.x * oc.x + oc.z * oc.z - c.radius * c.radius;
+	const double	discriminant = half_b * half_b - a * cc;
+
+	if (a == 0.0 || discriminant < 0.0)
+		return (false);
+	{
+		const double	sqrtd = sqrt(discriminant);
+		double			root = (-half_b - sqrtd) / a;
+		double			y;
+
+		y = r.origin.y + root * r.dir.y;
+		if (root < tmin || root > tmax || y < c.y0 || y > c.y1)
+		{
+			root = (-half_b + sqrtd) / a;
+			y = r.origin.y + root * r.dir.y;
+			if (root < tmin || root > tmax || y < c.y0 || y > c.y1)
+				return (false);
+		}
+		out->t = root;
+		out->p = ray_at(r, root);
+		out->n_unit = v3_norm(v3(out->p.x - c.center_xz.x, 0.0, out->p.z - c.center_xz.z));
+		if (v3_dot(out->n_unit, r.dir) > 0.0)
+			out->n_unit = v3_mul(out->n_unit, -1.0);
+		out->albedo = c.albedo;
+		out->mirror = false;
+		return (true);
+	}
+}
+
 static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
@@ -124,13 +224,56 @@ static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 
 	any = false;
 	{
-		const sphere	s = {.center = v3(0.0, 1.0, 3.0), .radius = 1.0,
-			.albedo = c3(0.86, 0.18, 0.18)};
-		if (hit_sphere(r, s, tmin, tmax, &h))
+		const box	platform = {
+			.min = v3(-8.0, 0.0, 0.0),
+			.max = v3(8.0, 0.55, 260.0),
+			.albedo = c3(0.55, 0.55, 0.58),
+			.mirror = false
+		};
+		if (hit_box(r, platform, tmin, tmax, &h))
 		{
 			*out = h;
 			tmax = h.t;
 			any = true;
+		}
+	}
+	{
+		const box	train = {
+			.min = v3(-3.5, 0.55, 60.0),
+			.max = v3(3.5, 2.7, 140.0),
+			.albedo = c3(0.12, 0.16, 0.25),
+			.mirror = false
+		};
+		if (hit_box(r, train, tmin, tmax, &h))
+		{
+			*out = h;
+			tmax = h.t;
+			any = true;
+		}
+	}
+	{
+		int	i = 0;
+		while (i < 14)
+		{
+			const double	z = 20.0 * (double)i;
+			const cylinder	pole_l = {.center_xz = v3(-6.2, 0.0, z), .radius = 0.18,
+				.y0 = 0.0, .y1 = 3.2, .albedo = c3(0.22, 0.18, 0.12)};
+			const cylinder	pole_r = {.center_xz = v3(6.2, 0.0, z), .radius = 0.18,
+				.y0 = 0.0, .y1 = 3.2, .albedo = c3(0.22, 0.18, 0.12)};
+
+			if (hit_cylinder_y(r, pole_l, tmin, tmax, &h))
+			{
+				*out = h;
+				tmax = h.t;
+				any = true;
+			}
+			if (hit_cylinder_y(r, pole_r, tmin, tmax, &h))
+			{
+				*out = h;
+				tmax = h.t;
+				any = true;
+			}
+			i++;
 		}
 	}
 	if (hit_plane_y0(r, tmin, tmax, &h))
@@ -152,7 +295,7 @@ static vec3	shade_diffuse(hit h)
 
 static vec3	trace(ray r, int depth)
 {
-	hit	h;
+	hit	h = {0};
 
 	if (depth <= 0)
 		return (c3(0.0, 0.0, 0.0));
