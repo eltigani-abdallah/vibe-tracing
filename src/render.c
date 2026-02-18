@@ -4,15 +4,6 @@
 
 static double	g_time_s = 0.0;
 
-typedef struct s_hit
-{
-	double	t;
-	vec3	p;
-	vec3	n_unit;
-	vec3	albedo;
-	bool	mirror;
-}	hit;
-
 typedef struct s_box
 {
 	vec3	min;
@@ -30,12 +21,12 @@ typedef struct s_cylinder
 	vec3	albedo;
 }	cylinder;
 
-static inline vec3	c3(double r, double g, double b)
+vec3	c3(double r, double g, double b)
 {
 	return (v3(r, g, b));
 }
 
-static inline vec3	c3_mul(vec3 a, double s)
+vec3	c3_mul(vec3 a, double s)
 {
 	return (v3_mul(a, s));
 }
@@ -64,7 +55,7 @@ static vec3	c3_lerp(vec3 a, vec3 b, double t)
 	return (v3_add(c3_mul(a, 1.0 - t), c3_mul(b, t)));
 }
 
-static uint32_t	c3_to_argb(vec3 c)
+uint32_t	c3_to_argb(vec3 c)
 {
 	const int	r = (int)round(255.0 * c.x);
 	const int	g = (int)round(255.0 * c.y);
@@ -234,9 +225,9 @@ static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 	any = false;
 	{
 		const box	submerged_platform = {
-			.min = v3(-8.0, -0.3, 0.0),
-			.max = v3(8.0, 0.0, 260.0),
-			.albedo = c3(0.40, 0.40, 0.43),
+			.min = v3(-8.0, 0.0, 0.0),
+			.max = v3(8.0, 0.15, 260.0),
+			.albedo = c3(0.65, 0.65, 0.70),
 			.mirror = false
 		};
 		if (hit_box(r, submerged_platform, tmin, tmax, &h))
@@ -297,7 +288,7 @@ static vec3	shade_diffuse(hit h)
 	return (c3_mul(h.albedo, ambient + (1.0 - ambient) * nl));
 }
 
-static vec3	trace(ray r, int depth)
+vec3	trace(ray r, int depth)
 {
 	hit	h = {0};
 
@@ -317,7 +308,7 @@ static vec3	trace(ray r, int depth)
 	return (sky_color(r.dir));
 }
 
-static void	fill_block(t_app *app, int x0, int y0, int scale, uint32_t argb)
+void	fill_block(t_app *app, int x0, int y0, int scale, uint32_t argb)
 {
 	int	y;
 

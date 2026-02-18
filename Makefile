@@ -12,7 +12,8 @@ SRCS := \
 	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/camera.c \
 	$(SRC_DIR)/render.c \
-	$(SRC_DIR)/optim.c
+	$(SRC_DIR)/optim.c \
+	$(SRC_DIR)/gpu.c
 
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
@@ -24,7 +25,7 @@ SDL_LIBS := $(shell pkg-config --libs sdl2 2>/dev/null)
 endif
 
 CPPFLAGS += $(SDL_CFLAGS)
-LDLIBS += $(SDL_LIBS) -lm
+LDLIBS += $(SDL_LIBS) -lm -lpthread
 
 .PHONY: all clean fclean re run
 
