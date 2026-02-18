@@ -18,11 +18,13 @@ static bool	handle_event(SDL_Event *e, bool *running)
 	return (false);
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
 	t_app	app;
 	bool	running;
 
+	(void)argc;
+	(void)argv;
 	if (!app_init(&app, "Ray Tracing (Chihiro)", 800, 600))
 		return (1);
 	running = true;

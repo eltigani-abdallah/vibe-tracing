@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
+
 #if defined(__has_include)
 #  if __has_include(<SDL2/SDL.h>)
 #    include <SDL2/SDL.h>

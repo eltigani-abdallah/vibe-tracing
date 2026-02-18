@@ -13,11 +13,11 @@ SRCS := \
 
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-SDL_CFLAGS := $(shell sdl2-config --cflags 2>nul)
-SDL_LIBS := $(shell sdl2-config --libs 2>nul)
+SDL_CFLAGS := $(shell sdl2-config --cflags 2>/dev/null)
+SDL_LIBS := $(shell sdl2-config --libs 2>/dev/null)
 ifeq ($(strip $(SDL_CFLAGS)),)
-SDL_CFLAGS := $(shell pkg-config --cflags sdl2 2>nul)
-SDL_LIBS := $(shell pkg-config --libs sdl2 2>nul)
+SDL_CFLAGS := $(shell pkg-config --cflags sdl2 2>/dev/null)
+SDL_LIBS := $(shell pkg-config --libs sdl2 2>/dev/null)
 endif
 
 CPPFLAGS += $(SDL_CFLAGS)
@@ -34,14 +34,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
-	@mkdir $(BUILD_DIR) 2>nul || (exit 0)
+	@mkdir -p $(BUILD_DIR)
 
 clean:
-	@rmdir /s /q $(BUILD_DIR) 2>nul || (exit 0)
+	@rm -rf $(BUILD_DIR)
 
 fclean: clean
-	@del /q $(NAME).exe 2>nul || (exit 0)
-	@del /q $(NAME) 2>nul || (exit 0)
+	@rm -f $(NAME) $(NAME).exe
 
 re: fclean all
 

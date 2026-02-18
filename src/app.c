@@ -13,6 +13,7 @@ bool	app_init(t_app *app, const char *title, int width, int height)
 	app_zero(app);
 	app->width = width;
 	app->height = height;
+	SDL_SetMainReady();
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		return (false);
 	app->window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
