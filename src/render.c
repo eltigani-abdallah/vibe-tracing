@@ -295,7 +295,7 @@ static vec3	wood_texture(vec3 p)
 
 static vec3	shade_diffuse(hit h)
 {
-	const vec3	light_dir = v3_norm(v3(-1.0, 2.0, 0.5));
+	const vec3	light_dir = v3_norm(v3(-1.0, 1.5, 0.0));
 	hit			shadow_test = {0};
 	const ray	shadow_ray = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
 		.dir = light_dir};
