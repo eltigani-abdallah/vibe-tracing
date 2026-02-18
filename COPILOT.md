@@ -2,9 +2,8 @@
 Objectif : Créer un moteur de Ray Tracing en C capable de rendre la scène de la "Sixième Station" (Gare inondée). Contrainte : Mode "Cinématique" (Caméra automatique) + Mode Interactif basique. Méthode : Vibe Coding (Utilisation intensive de l'IA pour le code boilerplate et mathématique). Équipe : 3 Personnes. Durée estimée : 1 Journée "Commando".
 
 🛠️ Pré-requis Techniques
-Langage : C (Norme C99 ou C11).
-Affichage : SDL2 (recommandé) ou MiniLibX.
-Outils IA : Cursor (IDE) + Claude 3.5 Sonnet / GPT-4o.
+Langage : C Norme C11.
+Affichage : SDL2.
 Pas de 3D externe : Tout est codé avec des primitives mathématiques (Sphères, Plans, Cubes).
 
 📅 Planning de la Journée (Sprint par Sprint)
@@ -68,3 +67,4 @@ Nettoyage du code : Ajouter des commentaires explicatifs générés par l'IA pou
 !!! Vous devez découper votre avancement avec Git : une feature -> un commit
 
 video exemple: https://www.youtube.com/watch?v=VbRmFSQYeac&list=RDVbRmFSQYeac&start_radio=1
+
