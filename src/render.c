@@ -215,14 +215,16 @@ static vec3	sky_color(vec3 dir)
 	const double	t = 0.5 * (dir.y + 1.0);
 	vec3	base = c3_lerp(c3(0.25, 0.5, 0.7), c3(0.1, 0.2, 0.5), t);
 	
-	double	cloud = sin(dir.x * 3.0) * cos(dir.z * 2.0) * 0.3 + 0.3;
-	cloud += sin(dir.x * 7.0 + dir.z * 5.0) * 0.15;
+	double	cloud = sin(dir.x * 2.5 + dir.z * 0.8) * sin(dir.z * 3.2 + dir.x * 0.5) * 0.4 + 0.3;
+	cloud += sin(dir.x * 5.0 + sin(dir.z * 2.0) * 2.0) * cos(dir.z * 4.0) * 0.2;
+	cloud += sin((dir.x + dir.z) * 1.8) * 0.15;
+	cloud *= cloud;
 	cloud = fmax(0.0, fmin(1.0, cloud));
 	
 	return (c3(
-		base.x + cloud * 0.2,
-		base.y + cloud * 0.2,
-		base.z + cloud * 0.15
+		base.x + cloud * 0.25,
+		base.y + cloud * 0.25,
+		base.z + cloud * 0.2
 	));
 }
 
