@@ -374,28 +374,10 @@ void	render_frame(t_app *app, const camera *cam, int scale, double time_s)
 		int	x = 0;
 		while (x < app->width)
 		{
-			vec3	color = v3(0.0, 0.0, 0.0);
-			int	samples = 2;
-			int	s = 0;
+			const ray	r = camera_ray_for_pixel(cam, x, y, app->width, app->height);
+			const uint32_t	argb = c3_to_argb(trace(r, 3));
 
-			while (s < samples)
-			{
-				int	t = 0;
-				while (t < samples)
-				{
-					const double	offset_x = (double)s / (double)samples + 0.25;
-					const double	offset_y = (double)t / (double)samples + 0.25;
-					const int		sx = x + (scale / 2) + (int)(offset_x - 0.5);
-					const int		sy = y + (scale / 2) + (int)(offset_y - 0.5);
-					const ray		r = camera_ray_for_pixel(cam, sx, sy, app->width, app->height);
-
-					color = v3_add(color, trace(r, 3));
-					t++;
-				}
-				s++;
-			}
-			color = v3_mul(color, 1.0 / (double)(samples * samples));
-			fill_block(app, x, y, scale, c3_to_argb(color));
+			fill_block(app, x, y, scale, argb);
 			x += scale;
 		}
 		y += scale;

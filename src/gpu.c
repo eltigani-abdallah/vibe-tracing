@@ -26,29 +26,11 @@ static void *render_thread(void *arg)
 		int	x = 0;
 		while (x < work->app->width)
 		{
-			vec3	color = v3(0.0, 0.0, 0.0);
-			int	samples = 2;
-			int	s = 0;
+			const ray	r = camera_ray_for_pixel(work->cam, x, y, 
+				work->app->width, work->app->height);
+			const uint32_t	argb = c3_to_argb(trace(r, 3));
 
-			while (s < samples)
-			{
-				int	t = 0;
-				while (t < samples)
-				{
-					const double	offset_x = (double)s / (double)samples + 0.25;
-					const double	offset_y = (double)t / (double)samples + 0.25;
-					const int		sx = x + (work->scale / 2) + (int)(offset_x - 0.5);
-					const int		sy = y + (work->scale / 2) + (int)(offset_y - 0.5);
-					const ray		r = camera_ray_for_pixel(work->cam, sx, sy, 
-						work->app->width, work->app->height);
-
-					color = v3_add(color, trace(r, 3));
-					t++;
-				}
-				s++;
-			}
-			color = v3_mul(color, 1.0 / (double)(samples * samples));
-			fill_block(work->app, x, y, work->scale, c3_to_argb(color));
+			fill_block(work->app, x, y, work->scale, argb);
 			x += work->scale;
 		}
 		y += work->scale;
