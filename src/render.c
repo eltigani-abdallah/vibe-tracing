@@ -214,7 +214,7 @@ static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
 
-	return (c3_lerp(c3(0.3, 0.7, 1.0), c3(0.0, 0.2, 0.8), t));
+	return (c3_lerp(c3(0.15, 0.35, 0.5), c3(0.0, 0.1, 0.4), t));
 }
 
 static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
@@ -295,7 +295,7 @@ static vec3	wood_texture(vec3 p)
 
 static vec3	shade_diffuse(hit h)
 {
-	const vec3	light_dir = v3_norm(v3(-1.0, 1.5, 0.0));
+	const vec3	light_dir = v3_norm(v3(-0.8, 0.5, 1.0));
 	hit			shadow_test = {0};
 	const ray	shadow_ray = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
 		.dir = light_dir};
