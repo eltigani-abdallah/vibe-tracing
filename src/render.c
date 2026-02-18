@@ -40,6 +40,11 @@ static inline vec3	c3_mul(vec3 a, double s)
 	return (v3_mul(a, s));
 }
 
+static inline vec3	c3_add(vec3 a, vec3 b)
+{
+	return (v3_add(a, b));
+}
+
 static inline vec3	c3_hadamard(vec3 a, vec3 b)
 {
 	return (v3(a.x * b.x, a.y * b.y, a.z * b.z));
@@ -226,8 +231,12 @@ static bool	hit_cylinder_y(ray r, cylinder c, double tmin, double tmax, hit *out
 static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
+	const vec3		sun_dir = v3_norm(v3(0.35, 0.55, 0.15));
+	const double	s = fmax(0.0, v3_dot(dir, sun_dir));
+	const double	sun = pow(s, 350.0);
+	const vec3		base = c3_lerp(c3(1.0, 0.55, 0.35), c3(0.24, 0.08, 0.47), t);
 
-	return (c3_lerp(c3(1.0, 0.55, 0.35), c3(0.24, 0.08, 0.47), t));
+	return (c3_add(base, c3_mul(c3(1.0, 0.85, 0.65), 2.0 * sun)));
 }
 
 static vec3	apply_fog(vec3 col, vec3 fog_col, double dist)
@@ -324,10 +333,16 @@ static vec3	trace(ray r, int depth)
 	{
 		if (h.mirror)
 		{
+			const double	f0 = 0.02;
+			const double	cos_i = fmax(0.0, -v3_dot(r.dir, h.n_unit));
+			const double	f = f0 + (1.0 - f0) * pow(1.0 - cos_i, 5.0);
 			const vec3	ref_dir = v3_norm(v3_reflect(r.dir, h.n_unit));
 			const ray	ref = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
 				.dir = ref_dir};
-			const vec3	ref_col = c3_hadamard(h.albedo, trace(ref, depth - 1));
+			const vec3	refl = trace(ref, depth - 1);
+			const vec3	base = c3_mul(h.albedo, 0.25);
+			const vec3	mix = c3_add(c3_mul(base, 1.0 - f), c3_mul(refl, f));
+			const vec3	ref_col = c3_hadamard(h.albedo, mix);
 
 			return (apply_fog(ref_col, sky_color(r.dir), h.t));
 		}
