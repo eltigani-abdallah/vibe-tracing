@@ -23,7 +23,7 @@ SDL_LIBS := $(shell pkg-config --libs sdl2 2>/dev/null)
 endif
 
 CPPFLAGS += $(SDL_CFLAGS)
-LDLIBS += $(SDL_LIBS)
+LDLIBS += $(SDL_LIBS) -lm
 
 .PHONY: all clean fclean re run
 
