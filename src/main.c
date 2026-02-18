@@ -31,6 +31,7 @@ int	main(int argc, char **argv)
 	vec3	cam_pos;
 	double	time_s;
 	uint32_t	last_ticks;
+	int		render_scale;
 
 	(void)argc;
 	(void)argv;
@@ -40,6 +41,7 @@ int	main(int argc, char **argv)
 	cam_pos = v3(0.0, 1.2, -4.0);
 	time_s = 0.0;
 	last_ticks = SDL_GetTicks();
+	render_scale = 4;
 	running = true;
 	while (running)
 	{
@@ -50,7 +52,7 @@ int	main(int argc, char **argv)
 		const uint8_t	*keys;
 		double		dx;
 		double		dz;
-		int			scale;
+		int			desired_scale;
 
 		toggle_auto = false;
 		while (SDL_PollEvent(&e))
@@ -71,7 +73,7 @@ int	main(int argc, char **argv)
 			cam_pos.x = 0.0;
 			cam_pos.y = 1.2 + sin(time_s * 0.8) * 0.15;
 			cam_pos.z += 2.0 * dt;
-			scale = 4;
+			desired_scale = 4;
 		}
 		else
 		{
@@ -80,15 +82,21 @@ int	main(int argc, char **argv)
 			dx = (keys[SDL_SCANCODE_D] ? 1.0 : 0.0) - (keys[SDL_SCANCODE_A] ? 1.0 : 0.0);
 			dz = (keys[SDL_SCANCODE_W] ? 1.0 : 0.0) - (keys[SDL_SCANCODE_S] ? 1.0 : 0.0);
 			if (dx != 0.0 || dz != 0.0)
-				scale = 4;
+				desired_scale = 4;
 			else
-				scale = 1;
+				desired_scale = 1;
 			cam_pos.x += dx * speed * dt;
 			cam_pos.z += dz * speed * dt;
 		}
+		if (desired_scale == 4)
+			render_scale = 4;
+		else if (render_scale > 1)
+			render_scale = (render_scale == 4) ? 2 : 1;
+		else
+			render_scale = 1;
 		camera_lookat(&cam, cam_pos, v3_add(cam_pos, v3(0.0, -0.05, 1.0)),
 			v3(0.0, 1.0, 0.0), 60.0, (double)app.width / (double)app.height);
-		render_frame(&app, &cam, scale, time_s);
+		render_frame(&app, &cam, render_scale, time_s);
 		if (!app_present(&app))
 			break ;
 		SDL_Delay(1);
