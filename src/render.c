@@ -270,6 +270,29 @@ static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 	return (any);
 }
 
+static vec3	wood_texture(vec3 p)
+{
+	double	wood_pattern = sin(p.x * 3.0 + p.z * 5.0) * sin(p.z * 2.0);
+	double	grain = sin(p.x * 15.0 + wood_pattern * 3.0) * 0.15;
+	
+	vec3	dark_brown = c3(0.4, 0.25, 0.15);
+	vec3	light_brown = c3(0.65, 0.5, 0.35);
+	
+	double	blend = 0.5 + 0.5 * sin(p.z * 2.5);
+	blend += grain;
+	
+	if (blend < 0.0)
+		blend = 0.0;
+	if (blend > 1.0)
+		blend = 1.0;
+	
+	return (c3(
+		dark_brown.x + (light_brown.x - dark_brown.x) * blend,
+		dark_brown.y + (light_brown.y - dark_brown.y) * blend,
+		dark_brown.z + (light_brown.z - dark_brown.z) * blend
+	));
+}
+
 static vec3	shade_diffuse(hit h)
 {
 	const vec3	light_dir = v3_norm(v3(-1.0, 2.0, 0.5));
@@ -279,13 +302,18 @@ static vec3	shade_diffuse(hit h)
 	double		nl;
 	double		ambient;
 	bool		in_shadow;
+	vec3		albedo;
 
+	albedo = h.albedo;
+	if (h.p.y > -0.01 && h.p.y < 0.2)
+		albedo = wood_texture(h.p);
+	
 	in_shadow = scene_intersect(shadow_ray, 0.001, 1e30, &shadow_test);
 	nl = fmax(0.0, v3_dot(h.n_unit, light_dir));
 	ambient = 0.22;
 	if (in_shadow)
 		nl *= 0.3;
-	return (c3_mul(h.albedo, ambient + (1.0 - ambient) * nl));
+	return (c3_mul(albedo, ambient + (1.0 - ambient) * nl));
 }
 
 vec3	trace(ray r, int depth)
@@ -347,7 +375,7 @@ void	render_frame(t_app *app, const camera *cam, int scale, double time_s)
 		while (x < app->width)
 		{
 			vec3	color = v3(0.0, 0.0, 0.0);
-			int	samples = (scale > 1) ? 2 : 4;
+			int	samples = 2;
 			int	s = 0;
 
 			while (s < samples)

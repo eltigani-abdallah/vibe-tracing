@@ -27,7 +27,7 @@ static void *render_thread(void *arg)
 		while (x < work->app->width)
 		{
 			vec3	color = v3(0.0, 0.0, 0.0);
-			int	samples = (work->scale > 1) ? 2 : 4;
+			int	samples = 2;
 			int	s = 0;
 
 			while (s < samples)
