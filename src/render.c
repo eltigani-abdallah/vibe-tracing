@@ -213,8 +213,17 @@ static bool	hit_cylinder_y(ray r, cylinder c, double tmin, double tmax, hit *out
 static vec3	sky_color(vec3 dir)
 {
 	const double	t = 0.5 * (dir.y + 1.0);
-
-	return (c3_lerp(c3(0.15, 0.35, 0.5), c3(0.0, 0.1, 0.4), t));
+	vec3	base = c3_lerp(c3(0.25, 0.5, 0.7), c3(0.1, 0.2, 0.5), t);
+	
+	double	cloud = sin(dir.x * 3.0) * cos(dir.z * 2.0) * 0.3 + 0.3;
+	cloud += sin(dir.x * 7.0 + dir.z * 5.0) * 0.15;
+	cloud = fmax(0.0, fmin(1.0, cloud));
+	
+	return (c3(
+		base.x + cloud * 0.2,
+		base.y + cloud * 0.2,
+		base.z + cloud * 0.15
+	));
 }
 
 static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
