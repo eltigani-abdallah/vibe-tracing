@@ -7,15 +7,31 @@ typedef struct s_hit
 	double	t;
 	vec3	p;
 	vec3	n_unit;
-	uint32_t	color;
+	vec3	albedo;
+	bool	mirror;
 }	hit;
 
 typedef struct s_sphere
 {
 	vec3		center;
 	double		radius;
-	uint32_t	color;
+	vec3		albedo;
 }	sphere;
+
+static inline vec3	c3(double r, double g, double b)
+{
+	return (v3(r, g, b));
+}
+
+static inline vec3	c3_mul(vec3 a, double s)
+{
+	return (v3_mul(a, s));
+}
+
+static inline vec3	c3_hadamard(vec3 a, vec3 b)
+{
+	return (v3(a.x * b.x, a.y * b.y, a.z * b.z));
+}
 
 static inline uint32_t	argb_u8(int r, int g, int b)
 {
@@ -31,20 +47,18 @@ static inline int	clampi(int v, int lo, int hi)
 	return (v);
 }
 
-static uint32_t	color_lerp(uint32_t a, uint32_t b, double t)
+static vec3	c3_lerp(vec3 a, vec3 b, double t)
 {
-	const int	ar = (int)((a >> 16) & 0xFF);
-	const int	ag = (int)((a >> 8) & 0xFF);
-	const int	ab = (int)(a & 0xFF);
-	const int	br = (int)((b >> 16) & 0xFF);
-	const int	bg = (int)((b >> 8) & 0xFF);
-	const int	bb = (int)(b & 0xFF);
+	return (v3_add(c3_mul(a, 1.0 - t), c3_mul(b, t)));
+}
 
-	const int	r = (int)round((1.0 - t) * (double)ar + t * (double)br);
-	const int	g = (int)round((1.0 - t) * (double)ag + t * (double)bg);
-	const int	bc = (int)round((1.0 - t) * (double)ab + t * (double)bb);
+static uint32_t	c3_to_argb(vec3 c)
+{
+	const int	r = (int)round(255.0 * c.x);
+	const int	g = (int)round(255.0 * c.y);
+	const int	b = (int)round(255.0 * c.z);
 
-	return (argb_u8(clampi(r, 0, 255), clampi(g, 0, 255), clampi(bc, 0, 255)));
+	return (argb_u8(clampi(r, 0, 255), clampi(g, 0, 255), clampi(b, 0, 255)));
 }
 
 static bool	hit_sphere(ray r, sphere s, double tmin, double tmax, hit *out)
@@ -70,7 +84,8 @@ static bool	hit_sphere(ray r, sphere s, double tmin, double tmax, hit *out)
 		out->t = root;
 		out->p = ray_at(r, root);
 		out->n_unit = v3_norm(v3_div(v3_sub(out->p, s.center), s.radius));
-		out->color = s.color;
+		out->albedo = s.albedo;
+		out->mirror = false;
 		return (true);
 	}
 }
@@ -90,40 +105,69 @@ static bool	hit_plane_y0(ray r, double tmin, double tmax, hit *out)
 	out->n_unit = v3(0.0, 1.0, 0.0);
 	if (v3_dot(out->n_unit, r.dir) > 0.0)
 		out->n_unit = v3_mul(out->n_unit, -1.0);
-	out->color = argb_u8(20, 80, 110);
+	out->albedo = c3(0.10, 0.18, 0.25);
+	out->mirror = true;
 	return (true);
 }
 
-static uint32_t	trace_primary(ray r)
+static vec3	sky_color(vec3 dir)
+{
+	const double	t = 0.5 * (dir.y + 1.0);
+
+	return (c3_lerp(c3(1.0, 0.55, 0.35), c3(0.24, 0.08, 0.47), t));
+}
+
+static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 {
 	hit		h;
-	hit		best;
 	bool	any;
-	double	tmax;
 
 	any = false;
-	tmax = 1e30;
 	{
 		const sphere	s = {.center = v3(0.0, 1.0, 3.0), .radius = 1.0,
-			.color = argb_u8(220, 40, 40)};
-		if (hit_sphere(r, s, 0.001, tmax, &h))
+			.albedo = c3(0.86, 0.18, 0.18)};
+		if (hit_sphere(r, s, tmin, tmax, &h))
 		{
-			best = h;
+			*out = h;
 			tmax = h.t;
 			any = true;
 		}
 	}
-	if (hit_plane_y0(r, 0.001, tmax, &h))
+	if (hit_plane_y0(r, tmin, tmax, &h))
 	{
-		best = h;
+		*out = h;
 		any = true;
 	}
-	if (any)
-		return (best.color);
+	return (any);
+}
+
+static vec3	shade_diffuse(hit h)
+{
+	const vec3	light_dir = v3_norm(v3(0.6, 1.0, -0.2));
+	const double	nl = fmax(0.0, v3_dot(h.n_unit, light_dir));
+	const double	ambient = 0.22;
+
+	return (c3_mul(h.albedo, ambient + (1.0 - ambient) * nl));
+}
+
+static vec3	trace(ray r, int depth)
+{
+	hit	h;
+
+	if (depth <= 0)
+		return (c3(0.0, 0.0, 0.0));
+	if (scene_intersect(r, 0.001, 1e30, &h))
 	{
-		const double	t = 0.5 * (r.dir.y + 1.0);
-		return (color_lerp(argb_u8(255, 140, 90), argb_u8(60, 20, 120), t));
+		if (h.mirror)
+		{
+			const vec3	ref_dir = v3_norm(v3_reflect(r.dir, h.n_unit));
+			const ray	ref = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
+				.dir = ref_dir};
+			return (c3_hadamard(h.albedo, trace(ref, depth - 1)));
+		}
+		return (shade_diffuse(h));
 	}
+	return (sky_color(r.dir));
 }
 
 void	render_frame(t_app *app, const camera *cam)
@@ -137,7 +181,7 @@ void	render_frame(t_app *app, const camera *cam)
 		while (x < app->width)
 		{
 			const ray		r = camera_ray_for_pixel(cam, x, y, app->width, app->height);
-			app->pixels[y * app->width + x] = trace_primary(r);
+			app->pixels[y * app->width + x] = c3_to_argb(trace(r, 3));
 			x++;
 		}
 		y++;
