@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+static double	g_time_s = 0.0;
+
 typedef struct s_hit
 {
 	double	t;
@@ -83,7 +85,14 @@ static bool	hit_plane_y0(ray r, double tmin, double tmax, hit *out)
 		return (false);
 	out->t = t;
 	out->p = ray_at(r, t);
-	out->n_unit = v3(0.0, 1.0, 0.0);
+	{
+		const double	w = 0.10;
+		const double	nx = w * sin(out->p.x * 0.55 + g_time_s * 1.7)
+			+ (0.5 * w) * sin(out->p.z * 0.22 + g_time_s * 0.9);
+		const double	nz = w * sin(out->p.z * 0.48 - g_time_s * 1.3);
+
+		out->n_unit = v3_norm(v3(-nx, 1.0, -nz));
+	}
 	if (v3_dot(out->n_unit, r.dir) > 0.0)
 		out->n_unit = v3_mul(out->n_unit, -1.0);
 	out->albedo = c3(0.10, 0.18, 0.25);
@@ -338,10 +347,11 @@ static void	fill_block(t_app *app, int x0, int y0, int scale, uint32_t argb)
 	}
 }
 
-void	render_frame(t_app *app, const camera *cam, int scale)
+void	render_frame(t_app *app, const camera *cam, int scale, double time_s)
 {
 	int	y;
 
+	g_time_s = time_s;
 	if (scale < 1)
 		scale = 1;
 	y = 0;

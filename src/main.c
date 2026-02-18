@@ -88,7 +88,7 @@ int	main(int argc, char **argv)
 		}
 		camera_lookat(&cam, cam_pos, v3_add(cam_pos, v3(0.0, -0.05, 1.0)),
 			v3(0.0, 1.0, 0.0), 60.0, (double)app.width / (double)app.height);
-		render_frame(&app, &cam, scale);
+		render_frame(&app, &cam, scale, time_s);
 		if (!app_present(&app))
 			break ;
 		SDL_Delay(1);
