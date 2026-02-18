@@ -16,6 +16,12 @@ void	camera_lookat(camera *c, vec3 origin, vec3 target, vec3 world_up,
 	const vec3	up = v3_cross(right, forward);
 
 	c->origin = origin;
+	c->pos = origin;
+	c->forward = forward;
+	c->right = right;
+	c->up = up;
+	c->fov = vfov_deg;
+	c->aspect = aspect;
 	c->horizontal = v3_mul(right, viewport_w);
 	c->vertical = v3_mul(up, viewport_h);
 	c->lower_left = v3_sub(

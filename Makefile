@@ -11,7 +11,8 @@ SRCS := \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/camera.c \
-	$(SRC_DIR)/render.c
+	$(SRC_DIR)/render.c \
+	$(SRC_DIR)/optim.c
 
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
