@@ -217,26 +217,26 @@ static vec3	sky_color(vec3 dir)
 	
 	double	cloud = 0.0;
 	
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 	{
-		double	cx = sin((double)i * 1.37) * 2.0;
-		double	cy = cos((double)i * 2.14) * 0.8 + 0.3;
-		double	cz = sin((double)i * 0.82) * 2.0;
+		double	cx = sin((double)i * 1.37) * 4.0;
+		double	cy = 0.5 + cos((double)i * 2.14) * 0.5;
+		double	cz = 2.0 + sin((double)i * 0.82) * 3.5;
 		
 		double	dist = sqrt((dir.x - cx) * (dir.x - cx) + 
 		                    (dir.y - cy) * (dir.y - cy) + 
 		                    (dir.z - cz) * (dir.z - cz));
 		
-		double	sphere = exp(-dist * dist * 1.5);
-		cloud += sphere * 0.5;
+		double	sphere = exp(-dist * dist * 2.0);
+		cloud += sphere * 0.4;
 	}
 	
 	cloud = fmin(1.0, cloud);
 	
 	return (c3(
-		base.x * (1.0 - cloud * 0.6) + 1.0 * cloud * 0.6,
-		base.y * (1.0 - cloud * 0.6) + 1.0 * cloud * 0.6,
-		base.z * (1.0 - cloud * 0.4) + 1.0 * cloud * 0.4
+		base.x * (1.0 - cloud * 0.8) + 1.0 * cloud * 0.8,
+		base.y * (1.0 - cloud * 0.8) + 1.0 * cloud * 0.8,
+		base.z * (1.0 - cloud * 0.6) + 1.0 * cloud * 0.6
 	));
 }
 
