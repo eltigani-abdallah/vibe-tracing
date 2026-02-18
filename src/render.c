@@ -230,6 +230,14 @@ static vec3	sky_color(vec3 dir)
 	return (c3_lerp(c3(1.0, 0.55, 0.35), c3(0.24, 0.08, 0.47), t));
 }
 
+static vec3	apply_fog(vec3 col, vec3 fog_col, double dist)
+{
+	const double	density = 0.018;
+	const double	trans = exp(-density * dist);
+
+	return (c3_lerp(fog_col, col, trans));
+}
+
 static bool	scene_intersect(ray r, double tmin, double tmax, hit *out)
 {
 	hit		h;
@@ -319,9 +327,11 @@ static vec3	trace(ray r, int depth)
 			const vec3	ref_dir = v3_norm(v3_reflect(r.dir, h.n_unit));
 			const ray	ref = {.origin = v3_add(h.p, v3_mul(h.n_unit, 1e-4)),
 				.dir = ref_dir};
-			return (c3_hadamard(h.albedo, trace(ref, depth - 1)));
+			const vec3	ref_col = c3_hadamard(h.albedo, trace(ref, depth - 1));
+
+			return (apply_fog(ref_col, sky_color(r.dir), h.t));
 		}
-		return (shade_diffuse(h));
+		return (apply_fog(shade_diffuse(h), sky_color(r.dir), h.t));
 	}
 	return (sky_color(r.dir));
 }
