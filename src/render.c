@@ -313,21 +313,52 @@ static vec3	trace(ray r, int depth)
 	return (sky_color(r.dir));
 }
 
-void	render_frame(t_app *app, const camera *cam)
+static void	fill_block(t_app *app, int x0, int y0, int scale, uint32_t argb)
 {
 	int	y;
 
+	y = 0;
+	while (y < scale)
+	{
+		int	x = 0;
+		const int	yy = y0 + y;
+
+		if (yy >= app->height)
+			break ;
+		while (x < scale)
+		{
+			const int	xx = x0 + x;
+
+			if (xx >= app->width)
+				break ;
+			app->pixels[yy * app->width + xx] = argb;
+			x++;
+		}
+		y++;
+	}
+}
+
+void	render_frame(t_app *app, const camera *cam, int scale)
+{
+	int	y;
+
+	if (scale < 1)
+		scale = 1;
 	y = 0;
 	while (y < app->height)
 	{
 		int	x = 0;
 		while (x < app->width)
 		{
-			const ray		r = camera_ray_for_pixel(cam, x, y, app->width, app->height);
-			app->pixels[y * app->width + x] = c3_to_argb(trace(r, 3));
-			x++;
+			const int	sx = x + (scale / 2);
+			const int	sy = y + (scale / 2);
+			const ray	r = camera_ray_for_pixel(cam, sx, sy, app->width, app->height);
+			const uint32_t	argb = c3_to_argb(trace(r, 3));
+
+			fill_block(app, x, y, scale, argb);
+			x += scale;
 		}
-		y++;
+		y += scale;
 	}
 }
 
